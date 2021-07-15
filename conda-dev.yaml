@@ -1,0 +1,10 @@
+channels:
+  - conda-forge
+
+dependencies:
+  - python
+  - click
+  - requests
+  - geopy
+  - jupyter
+  - black
