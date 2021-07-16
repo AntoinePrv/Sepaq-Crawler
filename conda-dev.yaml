@@ -3,6 +3,9 @@ channels:
 
 dependencies:
   - python
+  - pip
+  - pip:
+    - notify-py
   - click
   - requests
   - geopy

@@ -1,7 +1,8 @@
 from typing import Optional
+import datetime
 
 import click
-import datetime
+import notifypy
 
 import sepaq_crawler
 
@@ -18,7 +19,7 @@ def cli(
     distance: Optional[float],
 ):
     # Restrict parks to search
-    def park_filter(p: Park) -> bool:
+    def park_filter(p: sepaq_crawler.Park) -> bool:
         if parks is not None:
             return p.name in parks.split(",")
         elif distance is not None:
@@ -26,10 +27,21 @@ def cli(
         return True
 
     # Restrict Cabins to search
-    def cabin_filter(c: Cabin) -> bool:
+    def cabin_filter(c: sepaq_crawler.Cabin) -> bool:
         return c.is_available(arriving, leaving)
 
-    sepaq_crawler.search(park_filter=park_filter, cabin_filter=cabin_filter)
+    notify = notifypy.Notify(
+        default_notification_title="SEPAQ Cabin",
+        default_application_name="SEPAQ Crawler",
+    )
+
+    def alert(c: sepaq_crawler.Cabin) -> None:
+        print(f"Found Cabin {c.name}: {c.url}")
+        notify.message = f"Found Cabin in {c.park.name}"
+        notify.send()
+
+
+    sepaq_crawler.search(park_filter=park_filter, cabin_filter=cabin_filter, alert=alert)
 
 
 if __name__ == "__main__":

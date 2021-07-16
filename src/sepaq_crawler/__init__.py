@@ -88,7 +88,7 @@ class Park:
             self.url,
             f"{SEPAQ_BASE_URL}/en/reservation/carte/resultats",
         )
-        return [Cabin(c) for c in cabins]
+        return [Cabin(c, park=self) for c in cabins]
 
 
 @dataclasses.dataclass
@@ -96,6 +96,7 @@ class Cabin:
     """A SEPAQ Cabin."""
 
     data: Dict[str, Any]
+    park: Park
 
     @property
     def name(self) -> str:
@@ -136,6 +137,7 @@ class CabinDate:
 def search(
     park_filter: Callable[[Park], bool] = lambda p: True,
     cabin_filter: Callable[[Cabin], bool] = lambda c: True,
+    alert: Callable[[Cabin], None] = lambda c: None,
 ):
     """Search for available cabins.
 
@@ -157,6 +159,6 @@ def search(
     for p in parks:
         cabins = [c for c in p.cabins() if cabin_filter(c)]
         for c in cabins:
-            print(f"Found Cabin {c.name}: {c.url}")
+            alert(c)
     else:
         print("Found nothing")
