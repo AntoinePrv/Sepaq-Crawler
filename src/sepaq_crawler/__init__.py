@@ -136,6 +136,32 @@ class CabinDate:
         return self.data["availability"]
 
 
+def list_cabins(
+    park_filter: Callable[[Park], bool] = lambda p: True,
+    cabin_filter: Callable[[Cabin], bool] = lambda c: True,
+) -> List[Cabin]:
+    """List cabins matching criteria.
+
+    Parameters
+    ----------
+    park_filter:
+        A callback function to filter park to search into.
+    cabin_filter:
+        A callback function to filter valid cabins.
+
+    """
+    # Get list of park that validate conditions
+    parks = [p for p in Park.get_all() if park_filter(p)]
+    print("Searching following parks:")
+    for p in parks:
+        print(f"  - {p.name}")
+
+    # Get list of cabins that validate conditions
+    cabins = [c for p in parks for c in p.cabins() if cabin_filter(c)]
+
+    return cabins
+
+
 def search(
     park_filter: Callable[[Park], bool] = lambda p: True,
     cabin_filter: Callable[[Cabin], bool] = lambda c: True,
@@ -143,7 +169,7 @@ def search(
     alert: Callable[[Cabin], None] = lambda c: None,
     retries: Optional[int] = None,
     sleep: int = 60,
-):
+) -> None:
     """Search for available cabins.
 
     Parameters
@@ -162,14 +188,7 @@ def search(
         Number of seconds to sleep between two iterations.
 
     """
-    # Get list of park that validate conditions
-    parks = [p for p in Park.get_all() if park_filter(p)]
-    print("Searching following parks:")
-    for p in parks:
-        print(f"  - {p.name}")
-
-    # Get list of cabins that validate conditions
-    cabins = [c for p in parks for c in p.cabins() if cabin_filter(c)]
+    cabins = list_cabins(park_filter=park_filter, cabin_filter=cabin_filter)
 
     # Potentially iyerate forever if retries is None
     for i in itertools.count():

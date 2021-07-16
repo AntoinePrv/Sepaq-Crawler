@@ -42,13 +42,14 @@ def cli(
     )
 
     def alert(c: sepaq_crawler.Cabin) -> None:
-        print(f"Found Cabin {c.name}: {c.url}")
+        print(f"  - Found Cabin {c.name}: {c.url}")
         if notify:
-            notify.message = f"  - Found Cabin in {c.park.name}"
+            notify.message = f"Found Cabin in {c.park.name}"
             notify.send()
 
-
-    sepaq_crawler.search(park_filter=park_filter, cabin_available=cabin_available, alert=alert, retries=retries, sleep=sleep)
+    sepaq_crawler.search(
+        park_filter=park_filter, cabin_available=cabin_available, alert=alert, retries=retries, sleep=sleep
+    )
 
 
 if __name__ == "__main__":
