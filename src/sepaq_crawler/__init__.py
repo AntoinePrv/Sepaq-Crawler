@@ -199,6 +199,4 @@ def search(
             for c in cabins:
                 if cabin_available(c):
                     alert(c)
-            else:
-                print("  Found nothing")
         time.sleep(sleep)
