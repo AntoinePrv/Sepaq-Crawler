@@ -14,9 +14,6 @@ import requests
 
 SEPAQ_BASE_URL = "https://www.sepaq.com"
 
-Cabin = Dict[str, Any]
-CabinDate = Dict[str, Any]
-
 
 def stateful_json_request(page_url: str, api_url: str) -> Any:
     """Query SEPAQ API.
@@ -32,28 +29,34 @@ def stateful_json_request(page_url: str, api_url: str) -> Any:
 
 
 def date_time_range(start: datetime.date, stop: datetime.date) -> List[datetime.date]:
+    """List all days in a range."""
     n_days = (stop - start).days
     return [start + datetime.timedelta(i) for i in range(n_days)]
 
 
 @functools.lru_cache
 def geocoder() -> geopy.geocoders.Nominatim:
+    """Geocoder object to find locations."""
     return geopy.geocoders.Nominatim(user_agent="Sepaq-Crawler")
 
 
 @functools.lru_cache
 def current_location() -> geopy.Location:
+    """The current location according to IP."""
     r = requests.get("https://ipinfo.io/loc")
     lat, long = [float(coo) for coo in r.text.split(",")]
     return geocoder().reverse((lat, long))
 
 
 def distance_km(a: geopy.Location, b: geopy.Location) -> float:
+    """Flighing distance in km between two locations."""
     return geopy.distance.distance((a.latitude, a.longitude), (b.latitude, b.longitude)).km
 
 
 @dataclasses.dataclass
 class Park:
+    """A SEPAQ park."""
+
     data: Dict[str, Any]
 
     @classmethod
@@ -90,6 +93,8 @@ class Park:
 
 @dataclasses.dataclass
 class Cabin:
+    """A SEPAQ Cabin."""
+
     data: Dict[str, Any]
 
     @property
@@ -115,6 +120,8 @@ class Cabin:
 
 @dataclasses.dataclass
 class CabinDate:
+    """A SEPAQ Cabin on a given date."""
+
     data: Dict[str, Any]
 
     @property
@@ -130,6 +137,16 @@ def search(
     park_filter: Callable[[Park], bool] = lambda p: True,
     cabin_filter: Callable[[Cabin], bool] = lambda c: True,
 ):
+    """Search for available cabins.
+
+    Parameters
+    ----------
+    park_filter:
+        A callback function to filter park to search into.
+    cabin_filter:
+        A callback function to filter valid cabins.
+
+    """
     # Get list of park that validate conditions
     parks = [p for p in Park.get_all() if park_filter(p)]
     print("Searching following parks:")
