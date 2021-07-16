@@ -1,2 +1,12 @@
 # Sepaq-Crawler
-Utility to find free Sepaq cabins to rent.
+Uitlity to crawl the SEPAQ API.
+
+Installation:
+```bash
+pip install git+https://github.com/AntoinePrv/Sepaq-Crawler
+```
+
+Usage:
+```bash
+python -m sepaq_crawler --help
+```
