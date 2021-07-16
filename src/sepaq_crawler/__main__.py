@@ -26,8 +26,8 @@ def cli(
             return p.distance_km_from(current_location()) < distance
         return True
 
-    # Restrict Cabins to search
-    def cabin_filter(c: sepaq_crawler.Cabin) -> bool:
+    # Callback to assert whether a cabin is available
+    def cabin_available(c: sepaq_crawler.Cabin) -> bool:
         return c.is_available(arriving, leaving)
 
     notify = notifypy.Notify(
@@ -37,11 +37,11 @@ def cli(
 
     def alert(c: sepaq_crawler.Cabin) -> None:
         print(f"Found Cabin {c.name}: {c.url}")
-        notify.message = f"Found Cabin in {c.park.name}"
+        notify.message = f"  - Found Cabin in {c.park.name}"
         notify.send()
 
 
-    sepaq_crawler.search(park_filter=park_filter, cabin_filter=cabin_filter, alert=alert)
+    sepaq_crawler.search(park_filter=park_filter, cabin_available=cabin_available, alert=alert)
 
 
 if __name__ == "__main__":

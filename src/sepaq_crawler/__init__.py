@@ -4,6 +4,8 @@ import json
 import datetime
 import dataclasses
 import functools
+import itertools
+import time
 from typing import Dict, List, Any, Callable
 
 import click
@@ -137,7 +139,10 @@ class CabinDate:
 def search(
     park_filter: Callable[[Park], bool] = lambda p: True,
     cabin_filter: Callable[[Cabin], bool] = lambda c: True,
+    cabin_available: Callable[[Cabin], bool] = lambda c: True,
     alert: Callable[[Cabin], None] = lambda c: None,
+    retries: Optional[int] = None,
+    sleep: int = 60,
 ):
     """Search for available cabins.
 
@@ -147,6 +152,14 @@ def search(
         A callback function to filter park to search into.
     cabin_filter:
         A callback function to filter valid cabins.
+    cabin_available:
+        A callback evaluated on each retry to check if new cabins are available.
+    alert:
+        A callback to alert when a cabin is found.
+    retries:
+        Number of times to retry, or infinitly.
+    sleep:
+        Number of seconds to sleep between two iterations.
 
     """
     # Get list of park that validate conditions
@@ -156,9 +169,17 @@ def search(
         print(f"  - {p.name}")
 
     # Get list of cabins that validate conditions
-    for p in parks:
-        cabins = [c for c in p.cabins() if cabin_filter(c)]
-        for c in cabins:
-            alert(c)
-    else:
-        print("Found nothing")
+    cabins = [c for p in parks for c in p.cabins() if cabin_filter(c)]
+
+    # Potentially iyerate forever if retries is None
+    for i in itertools.count():
+        if i == retries:
+            break
+        else:
+            print(f"Iteration {i}")
+            for c in cabins:
+                if cabin_available(c):
+                    alert(c)
+            else:
+                print("  Found nothing")
+        time.sleep(sleep)
