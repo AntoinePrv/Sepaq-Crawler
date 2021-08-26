@@ -29,7 +29,7 @@ def cli(
         if parks is not None:
             return p.name in parks.split(",")
         elif distance is not None:
-            return p.distance_km_from(current_location()) < distance
+            return p.distance_km_from(sepaq_crawler.current_location()) < distance
         return True
 
     # Callback to assert whether a cabin is available
