@@ -212,4 +212,5 @@ def search(
             for c in cabins:
                 if cabin_available(c):
                     alert(c)
+                    cabins.remove(c)
         time.sleep(sleep)
