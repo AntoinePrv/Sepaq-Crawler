@@ -6,7 +6,7 @@ import dataclasses
 import functools
 import itertools
 import time
-from typing import Dict, List, Any, Callable
+from typing import List, Dict, Any, Callable, Iterator
 
 import click
 import geopy
@@ -30,10 +30,10 @@ def stateful_json_request(page_url: str, api_url: str) -> Any:
     return json.loads(api_response.content)
 
 
-def date_time_range(start: datetime.date, stop: datetime.date) -> List[datetime.date]:
+def date_time_range(start: datetime.date, stop: datetime.date) -> Iterator[datetime.date]:
     """List all days in a range."""
     n_days = (stop - start).days
-    return [start + datetime.timedelta(i) for i in range(n_days)]
+    return (start + datetime.timedelta(i) for i in range(n_days))
 
 
 @functools.lru_cache
@@ -62,13 +62,13 @@ class Park:
     data: Dict[str, Any]
 
     @classmethod
-    def get_all(cls) -> List[Park]:
+    def get_all(cls) -> Iterator[Park]:
         parks = stateful_json_request(
             f"{SEPAQ_BASE_URL}/en/reservation/chalet",
             f"{SEPAQ_BASE_URL}/en/reservation/carte/resultats",
         )
         # Some redirect to an external website
-        return [cls(p) for p in parks if p["url"].startswith("/")]
+        return (cls(p) for p in parks if p["url"].startswith("/"))
 
     @property
     def name(self) -> str:
@@ -108,12 +108,19 @@ class Cabin:
     def url(self) -> str:
         return SEPAQ_BASE_URL + self.data["url"]
 
-    def dates(self) -> List[CabinDate]:
+    @functools.cached_property
+    def capacity(self) -> int:
+        """Capacity of the chalet."""
+        # This is information from a Chalet (not a date) but this is the easiest way to find it.
+        first_cabin_date = next(self.dates())
+        return first_cabin_date.data["capaciteMax"]
+
+    def dates(self) -> Iterator[CabinDate]:
         dates = stateful_json_request(
             self.url,
             f"{SEPAQ_BASE_URL}/en/reservation/availabilities/",
         )
-        return [CabinDate(a) for a in dates]
+        return (CabinDate(a) for a in dates)
 
     def is_available(self, start: datetime.date, stop: datetime.date) -> bool:
         free_dates = {d.date for d in self.dates() if d.is_available}
