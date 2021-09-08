@@ -14,7 +14,7 @@ import geopy.distance
 import requests
 
 
-SEPAQ_BASE_URL = "https://www.sepaq.com"
+SEPAQ_BASE_URL: str = "https://www.sepaq.com"
 
 
 def stateful_json_request(page_url: str, api_url: str) -> Any:
@@ -38,7 +38,7 @@ def date_time_range(start: datetime.date, stop: datetime.date) -> List[datetime.
 
 @functools.lru_cache
 def geocoder() -> geopy.geocoders.Nominatim:
-    """Geocoder object to find locations."""
+    """Global geocoder object to find locations."""
     return geopy.geocoders.Nominatim(user_agent="Sepaq-Crawler")
 
 
@@ -132,6 +132,11 @@ class CabinDate:
         return datetime.date.fromisoformat(self.data["dateAsStandardString"])
 
     @property
+    def price(self) -> int:
+        # This is the only price listed. Why is it minimal?
+        return self.data["minimalNightPrice"]
+
+    @property
     def is_available(self) -> bool:
         return self.data["availability"]
 
@@ -152,12 +157,13 @@ def list_cabins(
     """
     # Get list of park that validate conditions
     parks = [p for p in Park.get_all() if park_filter(p)]
-    print("Searching following parks:")
+    print(f"Searching {len(parks)} parks:")
     for p in parks:
         print(f"  - {p.name}")
 
     # Get list of cabins that validate conditions
     cabins = [c for p in parks for c in p.cabins() if cabin_filter(c)]
+    print(f"Found {len(cabins)} cabins matching criteria.")
 
     return cabins
 
